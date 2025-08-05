@@ -50,38 +50,54 @@ services:
     networks:
       - llmnet 
 
-networks:
-  llmnet:
-    driver: bridge
-
-volumes:
-  ollama: {}
-  open-webui: {}
-  qdrant_data: {}
 
 
 # # If you want to serve multiple models under /models/, you need to start multiple vLLM instances, each with a different --model argument 
 
-#   vllm:
-#     image: vllm/vllm-openai:latest
-#     container_name: vllm
-#     restart: unless-stopped
-#     ports:
-#       - "28000:8000"  # OpenAI-compatible API endpoint
-#     volumes:
-#       - ../models:/models  # put your Hugging Face or converted model here
-#     command: >
-#       --model /models/Qwen3-0.6B
-#       --host 0.0.0.0
-#       --port 8000    
-#     # Optional: enable GPU
-#     # deploy:
-#     #   resources:
-#     #     reservations:
-#     #       devices:
-#     #         - capabilities: [gpu]
-#     networks:
-#       - llmnet
+  # vllm_Qwen3-0.6B:
+  #   image: vllm/vllm-openai:latest
+  #   container_name: vllm_Qwen3-0.6B
+  #   restart: unless-stopped
+  #   ports:
+  #     - "28001:8000"  # OpenAI-compatible API endpoint
+  #   volumes:
+  #     - ../models:/models  # put your Hugging Face or converted model here
+  #   command: >
+  #     --model /models/Qwen3-0.6B
+  #     --host 0.0.0.0
+  #     --port 8000    
+  #   # Optional: enable GPU
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - capabilities: [gpu]
+  #   networks:
+  #     - llmnet
+
+  vllm_multilingual-e5-large-instruct:
+    image: vllm/vllm-openai:latest
+    container_name: vllm_multilingual-e5-large-instruct
+    restart: unless-stopped
+    ports:
+      - "28000:8000"  # OpenAI-compatible API endpoint
+    volumes:
+      - ../models:/models  # put your Hugging Face or converted model here
+    command: >
+      --model /models/multilingual-e5-large-instruct
+      --host 0.0.0.0
+      --port 8000
+      --device cpu
+    environment:
+      - VLLM_LOGGING_LEVEL=DEBUG  # Set logging level, default is INFO
+    # Optional: enable GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]
+    networks:
+      - llmnet
 
 #   open-webui:
 #     image: ghcr.io/open-webui/open-webui:main
@@ -99,3 +115,13 @@ volumes:
 #       - ./openwebui_data:/app/backend/data
 #     networks:
 #       - llmnet    
+
+
+networks:
+  llmnet:
+    driver: bridge
+
+volumes:
+  ollama: {}
+  open-webui: {}
+  qdrant_data: {}

@@ -36,24 +36,55 @@ services:
     networks:
       - llmnet 
 
-      
-  qdrant:
-    # image: qdrant/qdrant
-    image: qdrant/qdrant:v1.15
-    container_name: qdrant
+  llama_cpp:
+    image: ghcr.io/ggml-org/llama.cpp:full
+    container_name: llama_cpp
     volumes:
-      - ./qdrant_data:/qdrant/storage:z
+      - ./backend/data/llama_cpp:/root/.llama_cpp
+      - ../models/:/custom/models
+    environment:
+      - LLAMA_CPP_MODELS=/custom/models
+      - LLAMA_CPP_SERVER_HOST=0.0.0.0
     ports:
-      - "26333:6333"
-      - "26334:6334"
+      - "11435:11435"
+    pull_policy: always
+    tty: true
     restart: unless-stopped
     networks:
-      - llmnet 
+      - llmnet
+
+
+networks:
+  llmnet:
+    driver: bridge
+
+volumes:
+  ollama: {}
+  open-webui: {}
+  qdrant_data: {}
+  llama_cpp: {}
+
+      
+  # qdrant:
+  #   # image: qdrant/qdrant
+  #   image: qdrant/qdrant:v1.15
+  #   container_name: qdrant
+  #   volumes:
+  #     - ./qdrant_data:/qdrant/storage:z
+  #   ports:
+  #     - "26333:6333"
+  #     - "26334:6334"
+  #   restart: unless-stopped
+  #   networks:
+  #     - llmnet 
 
 
 
 # # If you want to serve multiple models under /models/, you need to start multiple vLLM instances, each with a different --model argument 
+# Why vLLM Doesn't Support CPU
+# vLLM is tightly optimized for GPU-based inference, leveraging CUDA kernels, paged attention, and GPU memory management.
 
+# It does not implement a CPU backend at all. Even with tiny models, it will fail to start without a CUDA-compatible GPU.
   # vllm_Qwen3-0.6B:
   #   image: vllm/vllm-openai:latest
   #   container_name: vllm_Qwen3-0.6B
@@ -63,9 +94,33 @@ services:
   #   volumes:
   #     - ../models:/models  # put your Hugging Face or converted model here
   #   command: >
-  #     --model /models/Qwen3-0.6B
+  #     --model /models/Qwen/Qwen3-0.6B
   #     --host 0.0.0.0
-  #     --port 8000    
+  #     --port 8000
+    # Optional: enable GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]
+    # networks:
+    #   - llmnet
+
+  # vllm_multilingual-e5-large-instruct:
+  #   image: vllm/vllm-openai:latest
+  #   container_name: vllm_multilingual-e5-large-instruct
+  #   restart: unless-stopped
+  #   ports:
+  #     - "28000:8000"  # OpenAI-compatible API endpoint
+  #   volumes:
+  #     - ../models:/models  # put your Hugging Face or converted model here
+  #   command: >
+  #     --model /models/multilingual-e5-large-instruct
+  #     --host 0.0.0.0
+  #     --port 8000
+  #     --device cpu
+  #   environment:
+  #     - VLLM_LOGGING_LEVEL=DEBUG  # Set logging level, default is INFO
   #   # Optional: enable GPU
   #   # deploy:
   #   #   resources:
@@ -74,30 +129,6 @@ services:
   #   #         - capabilities: [gpu]
   #   networks:
   #     - llmnet
-
-  vllm_multilingual-e5-large-instruct:
-    image: vllm/vllm-openai:latest
-    container_name: vllm_multilingual-e5-large-instruct
-    restart: unless-stopped
-    ports:
-      - "28000:8000"  # OpenAI-compatible API endpoint
-    volumes:
-      - ../models:/models  # put your Hugging Face or converted model here
-    command: >
-      --model /models/multilingual-e5-large-instruct
-      --host 0.0.0.0
-      --port 8000
-      --device cpu
-    environment:
-      - VLLM_LOGGING_LEVEL=DEBUG  # Set logging level, default is INFO
-    # Optional: enable GPU
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - capabilities: [gpu]
-    networks:
-      - llmnet
 
 #   open-webui:
 #     image: ghcr.io/open-webui/open-webui:main
@@ -116,12 +147,3 @@ services:
 #     networks:
 #       - llmnet    
 
-
-networks:
-  llmnet:
-    driver: bridge
-
-volumes:
-  ollama: {}
-  open-webui: {}
-  qdrant_data: {}

@@ -36,22 +36,20 @@ services:
     networks:
       - llmnet 
 
-  llama_cpp:
-    image: ghcr.io/ggml-org/llama.cpp:full
-    container_name: llama_cpp
+      
+  qdrant:
+    # image: qdrant/qdrant
+    image: qdrant/qdrant:v1.15
+    container_name: qdrant
     volumes:
-      - ./backend/data/llama_cpp:/root/.llama_cpp
-      - ../models/:/custom/models
-    environment:
-      - LLAMA_CPP_MODELS=/custom/models
-      - LLAMA_CPP_SERVER_HOST=0.0.0.0
+      - ./qdrant_data:/qdrant/storage:z
     ports:
-      - "11435:11435"
-    pull_policy: always
-    tty: true
+      - "26333:6333"
+      - "26334:6334"
     restart: unless-stopped
     networks:
-      - llmnet
+      - llmnet 
+
 
 
 networks:
@@ -62,22 +60,6 @@ volumes:
   ollama: {}
   open-webui: {}
   qdrant_data: {}
-  llama_cpp: {}
-
-      
-  # qdrant:
-  #   # image: qdrant/qdrant
-  #   image: qdrant/qdrant:v1.15
-  #   container_name: qdrant
-  #   volumes:
-  #     - ./qdrant_data:/qdrant/storage:z
-  #   ports:
-  #     - "26333:6333"
-  #     - "26334:6334"
-  #   restart: unless-stopped
-  #   networks:
-  #     - llmnet 
-
 
 
 # # If you want to serve multiple models under /models/, you need to start multiple vLLM instances, each with a different --model argument 
